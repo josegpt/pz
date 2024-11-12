@@ -14,8 +14,8 @@ all: main
 .c.o:
 	${CC} -c $< ${CFLAGS}
 
-main: main.o
-	${CC} -o $@ main.o ${LDFLAGS}
+main: main.o pz.o
+	${CC} -o $@ main.o pz.o ${LDFLAGS}
 
 clean:
 	rm -f *.{o,core} main
