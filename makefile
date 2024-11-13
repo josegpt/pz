@@ -18,6 +18,6 @@ main: main.o pz.o
 	${CC} -o $@ main.o pz.o ${LDFLAGS}
 
 clean:
-	rm -f *.{o,core} main
+	rm -f *.{o,core,out} main
 
 .PHONY: all clean
