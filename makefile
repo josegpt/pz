@@ -23,4 +23,12 @@ addr: addr.o pz.o
 clean:
 	rm -f *.{o,core,out} index addr
 
-.PHONY: all clean
+install:
+	install -d ${CGIDIR}
+	install -o www -g www -m 0500 index ${CGIDIR}
+	install -o www -g www -m 0500 addr ${CGIDIR}
+
+uninstall:
+	rm -f ${CGIDIR}/{index,addr}
+
+.PHONY: all clean install uninstall
