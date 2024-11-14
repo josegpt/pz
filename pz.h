@@ -14,15 +14,73 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#define NHASH	4096
+#define NHASH	256
+#define VLEN	32
 
 struct map {
 	char*	k;
-	void*	v;
+	char*	v[VLEN];
+	int	l;
 	struct	map *n;
 };
 
-void	mapset(struct map**, char*, void*);
-void*	mapget(struct map**, char*);
+struct buffer {
+	char*	s;
+	int	n;
+	int	c;
+};
+
+enum {
+	CgiGet,
+	CgiHead,
+	CgiPost,
+	CgiPut,
+	CgiPatch,
+	CgiDelete,
+	CgiConnect,
+	CgiOptions,
+	CgiTrace,
+	MaxMethod
+};
+
+struct request {
+	int	method;
+	char*	path;
+	char*	type;
+	char*	accept;
+	char*	ip;
+	char*	qs;
+	struct	buffer body;
+	struct	map *h[NHASH];
+};
+
+struct response {
+	int	status;
+	char*	type;
+	struct	buffer body;
+	struct	map *h[NHASH];
+};
+
+char*	strlc(char*);
+char*	struc(char*);
+char*	strrplc(char*, char, char);
+char*	strtriml(char*);
+char*	strtrimr(char*);
+char*	strtrim(char*);
+
+void	mapadd(struct map**, char*, char*);
+void	mapset(struct map**, char*, char*);
+char*	mapget(struct map**, char*);
+char**	mapgetv(struct map**, char*);
 int	maphas(struct map**, char*);
 void	mapdel(struct map**, char*);
+
+int	bufwritev(struct buffer*, char*, va_list);
+int	bufwrite(struct buffer*, char*, ...);
+
+char*	cgishift(struct request*);
+char*	cgiis(struct request*, char*);
+char*	cgiaccepts(struct request*, char*);
+void	cgiredirect(struct request*, struct response*, char*);
+int	cgiparse(struct request*, char**);
+void	cgiserve(struct response*);

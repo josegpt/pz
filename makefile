@@ -8,16 +8,19 @@ LIBS=		-L/usr/local/lib -lsqlite3 -lm -lpthread
 CFLAGS=		-g -W -Wall -Wextra -pedantic -ansi ${INCS}
 LDFLAGS=	-static -pie ${LIBS}
 
-all: main
+all: index addr
 
 .SUFFIXES: .c .o
 .c.o:
 	${CC} -c $< ${CFLAGS}
 
-main: main.o pz.o
-	${CC} -o $@ main.o pz.o ${LDFLAGS}
+index: index.o pz.o html.o
+	${CC} -o $@ index.o pz.o html.o ${LDFLAGS}
+
+addr: addr.o pz.o
+	${CC} -o $@ addr.o pz.o ${LDFLAGS}
 
 clean:
-	rm -f *.{o,core,out} main
+	rm -f *.{o,core,out} index addr
 
 .PHONY: all clean
