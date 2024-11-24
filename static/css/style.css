@@ -29,8 +29,8 @@ html {
 }
 
 :root {
-	--bg0: #FFFFFF;
-	--bg1: #FAFAFA;
+	--bg0: #FAFAFA;
+	--bg1: #FFFFFF;
 
 	--gray0: #F2F2F2;
 	--gray1: #EBEBEB;
@@ -54,8 +54,8 @@ html {
 	}
 
 	:root {
-		--bg0: #0A0A0A;
-		--bg1: #000000;
+		--bg0: #000000;
+		--bg1: #0A0A0A;
 
 		--gray0: #1A1A1A;
 		--gray1: #1F1F1F;
@@ -214,7 +214,7 @@ label p {
 input,
 select,
 textarea {
-	background-color: var(--bg0);
+	background-color: transparent;
 	border: var(--border-thickness) solid var(--gray4);
 	border-radius: .4rem;
 	color: var(--gray9);
