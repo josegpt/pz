@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang=en>
+<meta charset=utf-8>
+
+<title>Design</title>
+<meta name=viewport content="width=device-width, initial-scale=1">
+<meta name=author content=josegpt>
+<meta name=description content=Design>
+<meta name=keywords content="HTML, CSS, C, Web, Services">
+<meta name=theme-color content=#d0021b>
+<meta property=og:type content=website>
+<meta property=og:title content=Design>
+<meta property=og:url content=https://design.pz.do>
+<meta property=og:description content=Design>
+<meta property=og:image content=/static/img/banner.png>
+<link rel=icon href=/static/img/favicon.ico>
+<link rel=preload as=style href=/static/css/style.css>
+<link rel=stylesheet href=/static/css/style.css>
+
+<body>
+<article class=banner>Banner</article>
+<header class=stack>
+<nav data-align=center data-justify=space-between class=cluster>
+<a href=/ data-style=tertiary class=logo>
+<img src=/static/img/logo.webp alt=pz>
+</a>
+<article>
+<span>Design</span>
+</article>
+</nav>
+<nav class=grid>
+<a data-style=secondary href=/>Text</a>
+<a data-style=secondary href=/b.html>Button</a>
+<a href=/f.html>Form</a>
+<a data-style=secondary href=/l.html>List</a>
+<a data-style=secondary href=/c.html>Code Block</a>
+<a data-style=secondary href=/d.html>Detail</a>
+<a data-style=secondary href=/t.html>Table</a>
+</nav>
+</header>
+
+<main>
+<hgroup>
+<h1>Table</h1>
+<p>Retrieve text input from a user.
+</hgroup>
+
+<section>
+<h2>Default</h2>
+<article class=box>
+<form>
+<label>
+<p>Firstname</p>
+<input type=text placeholder=John>
+</label>
+<label>
+<p>Lastname</p>
+<input type=text placeholder=Doe>
+</label>
+<label>
+<p>Password</p>
+<input type=password placeholder=Password>
+</label>
+<label>
+<p>Cellphone</p>
+<input type=tel placeholder=Cellphone>
+</label>
+<label>
+<p>Age</p>
+<input type=number placeholder=Age>
+</label>
+<label>
+<p>Date</p>
+<input type=date placeholder=Date>
+</label>
+<fieldset class=stack>
+<legend>Information</legend>
+<label>
+<p>Email</p>
+<input type=email placeholder=jose@pz.do>
+</label>
+<label>
+<p>Password*</p>
+<input type=password placeholder=p@ssw0rd required>
+</label>
+<label>
+<p>Email</p>
+<input type=email placeholder=jose@pz.do value=hey disabled>
+</label>
+<label>
+<p>Reason for contacting</p>
+<select>
+<option>Questions
+</select>
+</label>
+</fieldset>
+<label>
+<p>Message</p>
+<textarea placeholder=Hey!></textarea>
+</label>
+<label>
+<input name=radio type=radio>
+<span>Radio</span>
+</label>
+<label>
+<input name=radio type=radio>
+<span>Radio</span>
+</label>
+<label>
+<input type=checkbox>
+<span>Send a copy to yourself</span>
+</label>
+<input type=submit>
+<input data-style=secondary type=reset>
+</form>
+</article>
+</section>
+
+<section>
+<h2>Search</h2>
+<article class=box>
+<search>
+<form>
+<label>
+<p>Search</p>
+<input type=search placeholder="josegpt, e.g.">
+</label>
+</form>
+</search>
+</article>
+</section>
+</main>
