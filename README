@@ -5,6 +5,7 @@ pz
 depends on
 ----------
 	* make
+	* c
 
 license
 -------
