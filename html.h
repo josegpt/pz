@@ -14,41 +14,6 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-enum {
-	CgiGet,
-	CgiHead,
-	CgiPost,
-	CgiPut,
-	CgiPatch,
-	CgiDelete,
-	CgiConnect,
-	CgiOptions,
-	CgiTrace,
-	CgiMax
-};
-
-struct request {
-	int	 method;
-	char	*path;
-	char	*type;
-	char	*accept;
-	char	*ip;
-	char	*qs;
-	struct	 buffer body;
-	struct	 map *h[NHASH];
-};
-
-struct response {
-	int	 status;
-	char	*type;
-	struct	 buffer body;
-	struct	 map *h[NHASH];
-};
-
-char	*ctos(int);
-char	*cgishift(struct request *);
-char	*cgiis(struct request *, char *);
-char	*cgiaccepts(struct request *, char *);
-void	 cgiredirect(struct request *, struct response *, char *);
-int	 cgiparse(struct request *, char **);
-void	 cgiserve(struct response *);
+int	html(struct response *, char *, ...);
+void	htmlhead(struct response *, char *, char *);
+void	htmlerr(struct response *);

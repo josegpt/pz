@@ -21,4 +21,5 @@ struct buffer {
 	int	len;
 };
 
+int	bufwritev(struct buffer *, char *, va_list);
 int	bufwrite(struct buffer *, char *, ...);

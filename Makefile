@@ -12,8 +12,8 @@ all: addr
 .c.o:
 	${CC} -c $< ${CFLAGS}
 
-addr: addr.o cgi.o map.o buf.o str.o log.o
-	${CC} -o $@ addr.o cgi.o map.o buf.o str.o log.o ${LDFLAGS}
+addr: addr.o cgi.o html.o map.o buf.o str.o log.o
+	${CC} -o $@ addr.o cgi.o html.o map.o buf.o str.o log.o ${LDFLAGS}
 
 clean:
 	rm -f *.{o,core,out} addr

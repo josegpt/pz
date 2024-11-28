@@ -22,24 +22,64 @@
 #include "buf.h"
 #include "map.h"
 #include "cgi.h"
+#include "html.h"
 #include "log.h"
 
 static struct	request req;
 static struct	response res;
+static char	*type = "text/plain;charset=utf-8";
+
+static void
+ntallowed(struct request *req, struct response *res)
+{
+	res->status = 405;
+	if (cgiaccepts(req, "html"))
+		htmlerr(res);
+	else {
+		res->type = type;
+		bufwrite(&res->body, "%d %s", res->status, ctos(res->status));
+	}
+}
 
 static void
 addr(struct request *req, struct response *res)
 {
-	res->type = "text/plain;charset=utf-8";
-	bufwrite(&res->body, "%s", req->ip);
+	switch (req->method) {
+	case CgiGet:
+		if (cgiaccepts(req, "html")) {
+			htmlhead(res, "My Public IP Address", "Find out your public IP address.");
+			html(res, "<main>");
+			html(res, "<hgroup>");
+			html(res, "<h1>%s</h1>", req->ip);
+			html(res, "<p>My public IP address.");
+			html(res, "</hgroup>");
+			html(res, "</main>");
+		} else {
+			res->type = type;
+			bufwrite(&res->body, "%s", req->ip);
+		}
+		break;
+	default:
+		ntallowed(req, res);
+	}
 }
 
 static void
-usage(struct response *res)
+usage(struct request *req, struct response *res)
 {
-	res->status = 404;
-	res->type = "text/plain;charset=utf-8";
-	bufwrite(&res->body, "usage: addr.pz.do[/]");
+	switch (req->method) {
+	case CgiGet:
+		res->status = 404;
+		if (cgiaccepts(req, "html"))
+			htmlerr(res);
+		else {
+			res->type = type;
+			bufwrite(&res->body, "usage: addr.pz.do[/]");
+		}
+		break;
+	default:
+		ntallowed(req, res);
+	}
 }
 
 int
@@ -57,7 +97,7 @@ main(int argc, char **argv, char **envv)
 	if (*path == '\0')
 		addr(&req, &res);
 	else
-		usage(&res);
+		usage(&req, &res);
 	cgiserve(&res);
 	return (EXIT_SUCCESS);
 }

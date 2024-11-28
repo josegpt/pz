@@ -40,74 +40,6 @@ static struct method {
 	{"TRACE",	CgiTrace}
 };
 
-static char *
-ctos(int code)
-{
-	char *s;
-
-	switch (code) {
-	case 100: s = "continue"; break;
-	case 101: s = "switching protocols"; break;
-	case 102: s = "processing"; break;
-	case 200: s = "ok"; break;
-	case 201: s = "created"; break;
-	case 202: s = "accepted"; break;
-	case 203: s = "non-authoritative information"; break;
-	case 204: s = "no content"; break;
-	case 205: s = "reset content"; break;
-	case 206: s = "partial content"; break;
-	case 207: s = "multi-status"; break;
-	case 208: s = "already reported"; break;
-	case 226: s = "im used"; break;
-	case 300: s = "multiple choices"; break;
-	case 301: s = "moved permanently"; break;
-	case 302: s = "found"; break;
-	case 303: s = "see other"; break;
-	case 304: s = "not modified"; break;
-	case 305: s = "use proxy"; break;
-	case 307: s = "temporary redirect"; break;
-	case 308: s = "permanent redirect"; break;
-	case 400: s = "bad request"; break;
-	case 401: s = "unauthorized"; break;
-	case 402: s = "payment required"; break;
-	case 403: s = "forbidden"; break;
-	case 404: s = "not found"; break;
-	case 405: s = "method not allowed"; break;
-	case 406: s = "not acceptable"; break;
-	case 407: s = "proxy authentication required"; break;
-	case 408: s = "request timeout"; break;
-	case 409: s = "conflict"; break;
-	case 410: s = "gone"; break;
-	case 411: s = "length required"; break;
-	case 412: s = "precondition failed"; break;
-	case 413: s = "payload too large"; break;
-	case 414: s = "uri too long"; break;
-	case 415: s = "unsupported media type"; break;
-	case 416: s = "range not satisfiable"; break;
-	case 417: s = "expectation failed"; break;
-	case 418: s = "I'm a teapot"; break;
-	case 422: s = "unprocessable entity"; break;
-	case 423: s = "locked"; break;
-	case 424: s = "failed dependency"; break;
-	case 426: s = "upgrade required"; break;
-	case 428: s = "precondition required"; break;
-	case 429: s = "too many requests"; break;
-	case 431: s = "request header fields too large"; break;
-	case 500: s = "internal server error"; break;
-	case 501: s = "not implemented"; break;
-	case 502: s = "bad gateway"; break;
-	case 503: s = "service unavailable"; break;
-	case 504: s = "gateway timeout"; break;
-	case 505: s = "http version not supported"; break;
-	case 506: s = "variant also negotiates"; break;
-	case 507: s = "insufficient storage"; break;
-	case 508: s = "loop detected"; break;
-	case 510: s = "not extended"; break;
-	case 511: s = "network authentication required"; break;
-	}
-	return (s);
-}
-
 static int
 stom(char *s)
 {
@@ -128,6 +60,74 @@ stom(char *s)
 			return (m->to);
 	}
 	return (-1);
+}
+
+char *
+ctos(int code)
+{
+	char *s;
+
+	switch (code) {
+	case 100: s = "Continue"; break;
+	case 101: s = "Switching Protocols"; break;
+	case 102: s = "Processing"; break;
+	case 200: s = "OK"; break;
+	case 201: s = "Created"; break;
+	case 202: s = "Accepted"; break;
+	case 203: s = "Non-Authoritative Information"; break;
+	case 204: s = "No Content"; break;
+	case 205: s = "Reset Content"; break;
+	case 206: s = "Partial Content"; break;
+	case 207: s = "Multi-Status"; break;
+	case 208: s = "Already Reported"; break;
+	case 226: s = "IM Used"; break;
+	case 300: s = "Multiple Choices"; break;
+	case 301: s = "Moved Permanently"; break;
+	case 302: s = "Found"; break;
+	case 303: s = "See Other"; break;
+	case 304: s = "Not Modified"; break;
+	case 305: s = "Use Proxy"; break;
+	case 307: s = "Temporary Redirect"; break;
+	case 308: s = "Permanent Redirect"; break;
+	case 400: s = "Bad Request"; break;
+	case 401: s = "Unauthorized"; break;
+	case 402: s = "Payment Required"; break;
+	case 403: s = "Forbidden"; break;
+	case 404: s = "Not Found"; break;
+	case 405: s = "Method Not Allowed"; break;
+	case 406: s = "Not Acceptable"; break;
+	case 407: s = "Proxy Authentication Required"; break;
+	case 408: s = "Request Timeout"; break;
+	case 409: s = "Conflict"; break;
+	case 410: s = "Gone"; break;
+	case 411: s = "Length Required"; break;
+	case 412: s = "Precondition Failed"; break;
+	case 413: s = "Payload Too Large"; break;
+	case 414: s = "Uri Too Long"; break;
+	case 415: s = "Unsupported Media Type"; break;
+	case 416: s = "Range Not Satisfiable"; break;
+	case 417: s = "Expectation Failed"; break;
+	case 418: s = "I'm a teapot"; break;
+	case 422: s = "Unprocessable Entity"; break;
+	case 423: s = "Locked"; break;
+	case 424: s = "Failed Dependency"; break;
+	case 426: s = "Upgrade Required"; break;
+	case 428: s = "Precondition Required"; break;
+	case 429: s = "Too Many Requests"; break;
+	case 431: s = "Request Header Fields Too Large"; break;
+	case 500: s = "Internal Server Error"; break;
+	case 501: s = "Not Implemented"; break;
+	case 502: s = "Bad Gateway"; break;
+	case 503: s = "Service Unavailable"; break;
+	case 504: s = "Gateway Timeout"; break;
+	case 505: s = "HTTP Version Not Supported"; break;
+	case 506: s = "Variant Also Negotiates"; break;
+	case 507: s = "Insufficient Storage"; break;
+	case 508: s = "Loop Detected"; break;
+	case 510: s = "Not Extended"; break;
+	case 511: s = "Network Authentication Required"; break;
+	}
+	return (s);
 }
 
 char *
