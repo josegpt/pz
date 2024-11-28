@@ -24,7 +24,7 @@ enum {
 	Debug,
 	Info,
 	Warn,
-	Error,
+	Err,
 	Fatal
 };
 
@@ -41,8 +41,8 @@ logf(int sev, char *fmt, va_list ap)
 	case Warn:
 		p = "WARN";
 		break;
-	case Error:
-		p = "ERROR";
+	case Err:
+		p = "ERR";
 		break;
 	case Fatal:
 		p = "FATAL";
@@ -87,12 +87,12 @@ logwarn(char *fmt, ...)
 }
 
 void
-logerror(char *fmt, ...)
+logerr(char *fmt, ...)
 {
 	va_list ap;
 
 	va_start(ap, fmt);
-	logf(Error, fmt, ap);
+	logf(Err, fmt, ap);
 	va_end(ap);
 }
 

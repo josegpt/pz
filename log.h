@@ -17,5 +17,5 @@
 void	loginfo(char *, ...);
 void	logdebug(char *, ...);
 void	logwarn(char *, ...);
-void	logerror(char *, ...);
+void	logerr(char *, ...);
 void	logfatal(int, char *, ...);
