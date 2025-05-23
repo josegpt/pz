@@ -49,6 +49,7 @@ htmlhead(struct buffer *b, char *title, char *desc)
 	writen(b, "</a>");
 	writen(b, "</header>");
 	writen(b, "<nav data-justify=center class=cluster>");
+	writen(b, "<a href=https://pz.do>index</a>");
 	writen(b, "<a href=https://addr.pz.do>acc</a>");
 	writen(b, "</nav>");
 	writen(b, "<hr>");
@@ -76,8 +77,5 @@ htmlerr(struct buffer *b, int status)
 	writen(b, "<h1>%d</h1>", status);
 	writen(b, "<p>%s", msg);
 	writen(b, "</header>");
-	writen(b, "<footer>");
-	writen(b, "<a href=/>index</a>");
-	writen(b, "</footer>");
 	writen(b, "</main>");
 }
