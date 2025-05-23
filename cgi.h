@@ -14,9 +14,9 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#define BUFSZ	0xFFFF
-#define NHASH	0xFF
-#define VALSZ	0xF
+#define BUFSZ	65535
+#define NHASH	256
+#define VALSZ	16
 
 enum {
 	Debug,

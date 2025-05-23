@@ -108,17 +108,15 @@ static void
 logv(int sev, char *fmt, va_list ap)
 {
 	char *prefix, *prog, buf[256], *s;
-	int n;
 
 	if (sev < Debug || sev > Fatal)
 		sev = Info;
 
-	s = sevtab[sev];
+	s      = sevtab[sev];
 	prefix = "[%s] %s: ";
-	prog = (char *)getprogname();
-	n = snprintf(NULL, 0, prefix, s, prog);
-	snprintf(buf, n+1, prefix, s, prog);
-	strlcat(buf, fmt, sizeof(buf));
+	prog   = (char *)getprogname();
+	sprintf(buf, prefix, s, prog);
+	strcat(buf, fmt);
 	vfprintf(stderr, buf, ap);
 }
 
@@ -176,19 +174,13 @@ fatal(char *fmt, ...)
 int
 writev(struct buffer *b, char *fmt, va_list ap)
 {
-	va_list tp;
-	int res, diff;
-
-	va_copy(tp, ap);
-	res = vsnprintf(NULL, 0, fmt, tp);
-	va_end(tp);
+	int res;
 
 	if (b->at == NULL)
 		b->at = b->s;
 
-	diff = b->at - b->s;
-	assert(diff + res < BUFSZ);
-	b->at += vsnprintf(b->at, res + 1, fmt, ap);
+	res    = vsprintf(b->at, fmt, ap);
+	b->at += res;
 	return (res);
 }
 
@@ -209,14 +201,12 @@ writen(struct buffer *b, char *fmt, ...)
 {
 	va_list ap;
 	char buf[256], end[3];
-	int res, sz;
+	int res;
 
-	sz     = sizeof(buf);
 	end[0] = '\r';
 	end[1] = '\n';
-	end[2] = '\0';
-	strlcpy(buf, fmt, sz);
-	strlcat(buf, end, sz);
+	strcpy(buf, fmt);
+	strcat(buf, end);
 
 	va_start(ap, fmt);
 	res = writev(b, buf, ap);
@@ -263,9 +253,11 @@ void
 add(struct map *m, char *key, char *val)
 {
 	struct value *v;
+	int diff;
 
-	v = lookup(m, key);
-	assert(v->at - v->ss < VALSZ);
+	v    = lookup(m, key);
+	diff = v->at - v->ss;
+	assert(diff < VALSZ);
 	*v->at++ = val;
 }
 
@@ -368,6 +360,7 @@ sttstr(int status)
 	case 508: s = "loop detected"; break;
 	case 510: s = "not extended"; break;
 	case 511: s = "network authentication required"; break;
+	default:  s = "internal server error"; break;
 	}
 	return (s);
 }
@@ -386,9 +379,7 @@ istype(struct request *req, char *s)
 {
 	char *p;
 
-	p = NULL;
-	if (*req->type)
-		p = strstr(req->type, s);
+	p = strstr(req->type, s);
 	return (p);
 }
 
@@ -397,9 +388,7 @@ accepts(struct request *req, char *s)
 {
 	char *p;
 
-	p = NULL;
-	if (*req->accept)
-		p = strstr(req->accept, s);
+	p = strstr(req->accept, s);
 	return (p);
 }
 
@@ -499,5 +488,5 @@ render(struct response *res)
 	printf("content-type: %s\r\n", res->type);
 	printf("content-length: %d\r\n", len);
 	printf("\r\n");
-	printf("%.*s", len, b->s);
+	printf("%s", b->s);
 }
