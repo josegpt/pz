@@ -57,7 +57,7 @@ notallowed(struct request *req, struct response *res)
 	status      = 405;
 	path        = shift(req);
 	res->status = status;
-	warn("notallowed: path %s", path);
+	info("notallowed: path %s", path);
 	if (accepts(req, "html"))
 		htmlerr(&res->body, status);
 	else
@@ -70,7 +70,7 @@ notfound(struct request *req, struct response *res)
 	char *path;
 
 	path = shift(req);
-	warn("notfound: path %s", path);
+	info("notfound: path %s", path);
 	switch (req->method) {
 	case Get:
 		res->status = 404;
@@ -90,7 +90,7 @@ addr(struct request *req, struct response *res)
 	char *ip;
 
 	ip = req->ip;
-	warn("ip %s", ip);
+	info("ip %s", ip);
 	switch (req->method) {
 	case Get:
 		if (accepts(req, "html"))
