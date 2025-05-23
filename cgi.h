@@ -14,41 +14,73 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#define BUFSZ	0xFFFF
+#define NHASH	0xFF
+#define VALSZ	0xF
+
 enum {
-	CgiGet,
-	CgiHead,
-	CgiPost,
-	CgiPut,
-	CgiPatch,
-	CgiDelete,
-	CgiConnect,
-	CgiOptions,
-	CgiTrace,
-	CgiMax
+	Debug,
+	Info,
+	Warn,
+	Error,
+	Fatal
 };
 
-struct request {
+enum {
+	Connect,
+	Delete,
+	Get,
+	Head,
+	Options,
+	Patch,
+	Post,
+	Put,
+	Trace
+};
+
+struct	value {
+	char	*ss[VALSZ], **at;
+};
+
+struct	map {
+	char	*keys[NHASH];
+	struct	 value vals[NHASH];
+};
+
+struct	buffer {
+	char	s[BUFSZ], *at;
+};
+
+struct	request {
+	char	*path, *type, *accept, *ip, *query;
 	int	 method;
-	char	*path;
-	char	*type;
-	char	*accept;
-	char	*ip;
-	char	*qs;
 	struct	 buffer body;
-	struct	 map *h[NHASH];
+	struct	 map header;
 };
 
-struct response {
+struct	response {
+	char	*type;
 	int	 status;
-	char	*type;
 	struct	 buffer body;
-	struct	 map *h[NHASH];
+	struct	 map header;
 };
 
-char	*ctos(int);
-char	*cgishift(struct request *);
-char	*cgiis(struct request *, char *);
-char	*cgiaccepts(struct request *, char *);
-void	 cgiredirect(struct request *, struct response *, char *);
-int	 cgiparse(struct request *, char **);
-void	 cgiserve(struct response *);
+void	 debug(char *, ...);
+void	 info(char *, ...);
+void	 warn(char *, ...);
+void	 error(char *, ...);
+void	 fatal(char *, ...);
+void	 add(struct map *, char *, char *);
+void	 set(struct map *, char *, char *);
+char	*get(struct map *, char *);
+int	 has(struct map *, char *);
+int	 writev(struct buffer *, char *, va_list);
+int	 writef(struct buffer *, char *, ...);
+int	 writen(struct buffer *, char *, ...);
+char	*sttstr(int);
+char	*shift(struct request *);
+char	*istype(struct request *, char *);
+char	*accepts(struct request *, char *);
+void	 redirect(struct request *, struct response *, char *);
+void	 parse(char **, struct request *);
+void	 render(struct response *);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Jose G Perez Taveras <josegpt27@gmail.com>
+ * Copyright (c) 2025 Jose G Perez Taveras <josegpt27@gmail.com>
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -19,66 +19,87 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "buf.h"
-#include "map.h"
 #include "cgi.h"
 #include "html.h"
-#include "log.h"
 
 static struct	request req;
 static struct	response res;
-static char	*type = "text/plain;charset=utf-8";
 
 static void
-ntallowed(struct request *req, struct response *res)
+plainf(struct response *res, char *fmt, ...)
 {
-	res->status = 405;
-	if (cgiaccepts(req, "html"))
-		htmlerr(res);
-	else {
-		res->type = type;
-		bufwrite(&res->body, "%d %s", res->status, ctos(res->status));
+	va_list ap;
+
+	res->type = "text/plain;charset=utf-8";
+	va_start(ap, fmt);
+	writev(&res->body, fmt, ap);
+	va_end(ap);
+}
+
+static void
+addrhtml(struct response *res, char *ip)
+{
+	struct buffer *b;
+
+	b = &res->body;
+	htmlhead(b, "addr", "public ip addr.");
+	writen(b, "<main>");
+	writen(b, "<h1>%s</h1>", ip);
+	writen(b, "</main>");
+}
+
+static void
+notallowed(struct request *req, struct response *res)
+{
+	char *path;
+	int status;
+
+	status      = 405;
+	path        = shift(req);
+	res->status = status;
+	warn("notallowed: path %s", path);
+	if (accepts(req, "html"))
+		htmlerr(&res->body, status);
+	else
+		plainf(res, "%d %s", status, sttstr(status));
+}
+
+static void
+notfound(struct request *req, struct response *res)
+{
+	char *path;
+
+	path = shift(req);
+	warn("notfound: path %s", path);
+	switch (req->method) {
+	case Get:
+		res->status = 404;
+		if (accepts(req, "html"))
+			htmlerr(&res->body, res->status);
+		else
+			plainf(res, "usage: addr.pz.do[/]");
+		break;
+	default:
+		notallowed(req, res);
 	}
 }
 
 static void
 addr(struct request *req, struct response *res)
 {
-	switch (req->method) {
-	case CgiGet:
-		if (cgiaccepts(req, "html")) {
-			htmlhead(res, "My Public IP Address", "Find out your public IP address.");
-			html(res, "<main>");
-			html(res, "<hgroup>");
-			html(res, "<h1>%s</h1>", req->ip);
-			html(res, "<p>My public IP address.");
-			html(res, "</hgroup>");
-			html(res, "</main>");
-		} else {
-			res->type = type;
-			bufwrite(&res->body, "%s", req->ip);
-		}
-		break;
-	default:
-		ntallowed(req, res);
-	}
-}
+	char *ip;
 
-static void
-usage(struct request *req, struct response *res)
-{
+	ip = req->ip;
+	warn("ip %s", ip);
 	switch (req->method) {
-	case CgiGet:
-		res->status = 404;
-		if (cgiaccepts(req, "html"))
-			htmlerr(res);
-		else {
-			res->type = type;
-			bufwrite(&res->body, "usage: addr.pz.do[/]");
-		}
+	case Get:
+		if (accepts(req, "html"))
+			addrhtml(res, ip);
+		else
+			plainf(res, "%s", ip);
 		break;
 	default:
-		ntallowed(req, res);
+		notallowed(req, res);
 	}
 }
 
@@ -90,14 +111,15 @@ main(int argc, char **argv, char **envv)
 	(void)argc;
 	(void)argv;
 	if (pledge("stdio", NULL) == -1)
-		logfatal(EXIT_FAILURE, "pledge");
-	if (cgiparse(&req, envv) == -1)
-		logfatal(EXIT_FAILURE, "cgiparse");
-	path = cgishift(&req);
+		fatal("pledge");
+
+	parse(envv, &req);
+	path = shift(&req);
 	if (*path == '\0')
 		addr(&req, &res);
 	else
-		usage(&req, &res);
-	cgiserve(&res);
+		notfound(&req, &res);
+
+	render(&res);
 	return (EXIT_SUCCESS);
 }

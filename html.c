@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Jose G Perez Taveras <josegpt27@gmail.com>
+ * Copyright (c) 2025 Jose G Perez Taveras <josegpt27@gmail.com>
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -18,79 +18,66 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "buf.h"
-#include "map.h"
 #include "cgi.h"
-#include "html.h"
 
-int
-html(struct response *r, char *fmt, ...)
+void
+htmlhead(struct buffer *b, char *title, char *desc)
 {
-	va_list ap;
-	char buf[256], end[3];
-	int n;
-
-	end[0] = '\r';
-	end[1] = '\n';
-	end[2] = '\0';
-	strlcpy(buf, fmt, sizeof(buf));
-	strlcat(buf, end, sizeof(buf));
-
-	va_start(ap, fmt);
-	n = bufwritev(&r->body, buf, ap);
-	va_end(ap);
-	return (n);
+	writen(b, "<!doctype html>");
+	writen(b, "<html lang=en>");
+	writen(b, "<meta charset=utf-8>");
+	writen(b, "");
+	writen(b, "<title>%s</title>", title);
+	writen(b, "<meta name=viewport content=\"width=device-width, initial-scale=1\">");
+	writen(b, "<meta name=author content=josegpt>");
+	writen(b, "<meta name=description content=\"%s\">", desc);
+	writen(b, "<meta name=keywords content=\"html, css, c, web, services\">");
+	writen(b, "<meta name=theme-color content=#d0021b>");
+	writen(b, "<meta property=og:type content=website>");
+	writen(b, "<meta property=og:title content=\"%s\">", title);
+	writen(b, "<meta property=og:url content=https://pz.do>");
+	writen(b, "<meta property=og:description content=\"%s\">", desc);
+	writen(b, "<meta property=og:image content=/static/img/banner.png>");
+	writen(b, "<link rel=icon href=/static/img/favicon.ico>");
+	writen(b, "<link rel=preload as=style href=/static/css/style.css>");
+	writen(b, "<link rel=stylesheet href=/static/css/style.css>");
+	writen(b, "");
+	writen(b, "<body>");
+	writen(b, "<header>");
+	writen(b, "<a href=/ id=logo>");
+	writen(b, "<img src=/static/img/logo.webp alt=pz>");
+	writen(b, "</a>");
+	writen(b, "</header>");
+	writen(b, "<nav data-justify=center class=cluster>");
+	writen(b, "<a href=https://addr.pz.do>acc</a>");
+	writen(b, "</nav>");
+	writen(b, "<hr>");
 }
 
 void
-htmlhead(struct response *r, char *title, char *desc)
+htmlerr(struct buffer *b, int status)
 {
-	html(r, "<!doctype html>");
-	html(r, "<html lang=en>");
-	html(r, "<meta charset=utf-8>");
-	html(r, "");
-	html(r, "<title>%s</title>", title);
-	html(r, "<meta name=viewport content=\"width=device-width, initial-scale=1\">");
-	html(r, "<meta name=author content=josegpt>");
-	html(r, "<meta name=description content=\"%s\">", desc);
-	html(r, "<meta name=keywords content=\"HTML, CSS, C, Web, Services\">");
-	html(r, "<meta name=theme-color content=#d0021b>");
-	html(r, "<meta property=og:type content=website>");
-	html(r, "<meta property=og:title content=\"%s\">", title);
-	html(r, "<meta property=og:url content=https://pz.do>");
-	html(r, "<meta property=og:description content=\"%s\">", desc);
-	html(r, "<meta property=og:image content=/static/img/banner.png>");
-	html(r, "<link rel=icon href=/static/img/favicon.ico>");
-	html(r, "<link rel=preload as=style href=/static/css/style.css>");
-	html(r, "<link rel=stylesheet href=/static/css/style.css>");
-	html(r, "");
-	html(r, "<body>");
-	html(r, "<header class=stack>");
-	html(r, "<nav data-align=center data-justify=space-between class=cluster>");
-	html(r, "<a href=/ data-style=tertiary class=logo>");
-	html(r, "<img src=/static/img/logo.webp alt=pz>");
-	html(r, "</a>");
-	html(r, "<article>");
-	html(r, "<span>%s</span>", title);
-	html(r, "</article>");
-	html(r, "</nav>");
-	html(r, "</header>");
-}
+	char *title, *msg;
 
-void
-htmlerr(struct response *r)
-{
-	char *title;
+	switch (status) {
+	case 404:
+		msg = "you lost.";
+		break;
+	case 405:
+		msg = "we don't do that here.";
+	default:
+		msg = "someting weeeeird happened.";
+	}
 
-	title = ctos(r->status);
-	htmlhead(r, title, title);
-	html(r, "<main>");
-	html(r, "<hgroup>");
-	html(r, "<h1>%d</h1>", r->status);
-	html(r, "<p>%s", title);
-	html(r, "</hgroup>");
-	html(r, "<section>");
-	html(r, "<a href=/>Go Home</a>");
-	html(r, "</section>");
-	html(r, "</main>");
+	title  = sttstr(status);
+	htmlhead(b, title, title);
+	writen(b, "<main class=stack>");
+	writen(b, "<header>");
+	writen(b, "<h1>%d</h1>", status);
+	writen(b, "<p>%s", msg);
+	writen(b, "</header>");
+	writen(b, "<footer>");
+	writen(b, "<a href=/>index</a>");
+	writen(b, "</footer>");
+	writen(b, "</main>");
 }

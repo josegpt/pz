@@ -14,6 +14,5 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-int	html(struct response *, char *, ...);
-void	htmlhead(struct response *, char *, char *);
-void	htmlerr(struct response *);
+void	htmlhead(struct buffer *, char *, char *);
+void	htmlerr(struct buffer *, int);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Jose G Perez Taveras <josegpt27@gmail.com>
+ * Copyright (c) 2025 Jose G Perez Taveras <josegpt27@gmail.com>
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,125 +14,369 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <assert.h>
+#include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "buf.h"
-#include "map.h"
 #include "cgi.h"
-#include "str.h"
+
+static char	*sevtab[] = {
+	"DBG",
+	"INF",
+	"WRN",
+	"ERR",
+	"FTL"
+};
 
 static int	redirects[] = {301, 302, 303, 307, 308, 0};
 
 static struct method {
-	char*	from;
-	int	to;
-} methodtab[CgiMax] = {
-	{"CONNECT",	CgiConnect},
-	{"DELETE",	CgiDelete},
-	{"GET",		CgiGet},
-	{"HEAD",	CgiHead},
-	{"OPTIONS",	CgiOptions},
-	{"PATCH",	CgiPatch},
-	{"POST",	CgiPost},
-	{"PUT",		CgiPut},
-	{"TRACE",	CgiTrace}
+	char	*from;
+	int	 to;
+} methodtab[] = {
+	{"CONNECT",	Connect},
+	{"DELETE",	Delete},
+	{"GET",		Get},
+	{"HEAD",	Head},
+	{"OPTIONS",	Options},
+	{"PATCH",	Patch},
+	{"POST",	Post},
+	{"PUT",		Put},
+	{"TRACE",	Trace}
 };
 
-static int
-stom(char *s)
+char *
+lowercase(char *s)
 {
-	struct method *m;
-	int c, h, l, md;
+	char *p;
 
-	l = 0;
-	h = CgiMax - 1;
-	while (l <= h) {
-		md = (l+h) / 2;
-		m = methodtab + md;
-		c = strcmp(s, m->from);
-		if (c > 0)
-			l = md + 1;
-		else if (c < 0)
-			 h = md - 1;
-		else
-			return (m->to);
-	}
-	return (-1);
+	for (p=s; *p; ++p)
+		*p = tolower(*p);
+	return (s);
 }
 
 char *
-ctos(int code)
+uppercase(char *s)
+{
+	char *p;
+
+	for (p=s; *p; ++p)
+		*p = toupper(*p);
+	return (s);
+}
+
+char *
+replace(char *s, char o, char n)
+{
+	char *p;
+
+	for (p=s; *p; ++p)
+		if (*p==o)
+			*p = n;
+	return (s);
+}
+
+char *
+triml(char *s)
+{
+	for (; isspace(*s); ++s);
+	return (s);
+}
+
+char *
+trimr(char *s)
+{
+	char *p;
+
+	for (p=s+strlen(s); isspace(*++p););
+	*++p ='\0';
+	return (s);
+}
+
+char *
+trims(char *s)
+{
+	s = triml(s);
+	s = trimr(s);
+	return (s);
+}
+
+static void
+logv(int sev, char *fmt, va_list ap)
+{
+	char *prefix, *prog, buf[256], *s;
+	int n, sz;
+
+	if (sev < Debug || sev > Fatal)
+		sev = Info;
+
+	sz = sizeof(buf);
+	memset(buf, 0, sz);
+	s = sevtab[sev];
+	prefix = "[%s] %s: ";
+	prog = (char *)getprogname();
+	n = snprintf(NULL, 0, prefix, s, prog);
+	snprintf(buf, n+1, prefix, s, prog);
+	n = strlcat(buf, fmt, sz);
+	buf[n] = '\0';
+	vfprintf(stderr, buf, ap);
+}
+
+void
+info(char *fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, fmt);
+	logv(Info, fmt, ap);
+	va_end(ap);
+}
+
+void
+debug(char *fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, fmt);
+	logv(Debug, fmt, ap);
+	va_end(ap);
+}
+
+void
+warn(char *fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, fmt);
+	logv(Warn, fmt, ap);
+	va_end(ap);
+}
+
+void
+err(char *fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, fmt);
+	logv(Error, fmt, ap);
+	va_end(ap);
+}
+
+void
+fatal(char *fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, fmt);
+	logv(Fatal, fmt, ap);
+	va_end(ap);
+	exit(1);
+}
+
+int
+writev(struct buffer *b, char *fmt, va_list ap)
+{
+	va_list tp;
+	int res, diff;
+
+	va_copy(tp, ap);
+	res = vsnprintf(NULL, 0, fmt, tp);
+	va_end(tp);
+
+	if (b->at == NULL)
+		b->at = b->s;
+
+	diff = b->at - b->s;
+	assert(diff + res < BUFSZ);
+	b->at += vsnprintf(b->at, res + 1, fmt, ap);
+	return (res);
+}
+
+int
+writef(struct buffer *b, char *fmt, ...)
+{
+	va_list ap;
+	int res;
+
+	va_start(ap, fmt);
+	res = writev(b, fmt, ap);
+	va_end(ap);
+	return (res);
+}
+
+int
+writen(struct buffer *b, char *fmt, ...)
+{
+	va_list ap;
+	char buf[256], end[3];
+	int res, sz;
+
+	sz     = sizeof(buf);
+	end[0] = '\r';
+	end[1] = '\n';
+	end[2] = '\0';
+	strlcpy(buf, fmt, sz);
+	strlcat(buf, end, sz);
+
+	va_start(ap, fmt);
+	res = writev(b, buf, ap);
+	va_end(ap);
+	return (res);
+}
+
+static unsigned long
+hash(char *key)
+{
+	unsigned long res;
+	int c;
+
+	res = 5381;
+	while ((c = *key++))
+		res = ((res<<5) + res) + c;
+	return (res % NHASH);
+}
+
+static struct value *
+lookup(struct map *m, char *key)
+{
+	struct value *res;
+	unsigned long i, hashed;
+	char **keys, *s;
+
+	hashed = hash(key);
+	i      = hashed;
+	keys   = m->keys;
+	while ((s = keys[i]) && strcmp(s, key)) {
+		i = (i + 1) % NHASH;
+		assert(i != hashed);
+	}
+
+	keys[i] = key;
+	res     = &m->vals[i];
+	if (res->at == NULL)
+		res->at = res->ss;
+
+	return (res);
+}
+
+void
+add(struct map *m, char *key, char *val)
+{
+	struct value *v;
+
+	v = lookup(m, key);
+	assert(v->at - v->ss < VALSZ);
+	*v->at++ = val;
+}
+
+void
+set(struct map *m, char *key, char *val)
+{
+	struct value *v;
+
+	v        = lookup(m, key);
+	v->at    = v->ss;
+	*v->at++ = val;
+}
+
+char *
+get(struct map *m, char *key)
+{
+	struct value *v;
+	char *res;
+	int diff;
+
+	v    = lookup(m, key);
+	diff = v->at - v->ss;
+	res  = diff > 0 ? *v->ss : "";
+	return (res);
+}
+
+int
+has(struct map *m, char *key)
+{
+	char *s;
+	int res;
+
+	s   = get(m, key);
+	res = *s != '\0';
+	return (res);
+}
+
+/* todo: move to a table */
+char *
+sttstr(int status)
 {
 	char *s;
 
-	switch (code) {
-	case 100: s = "Continue"; break;
-	case 101: s = "Switching Protocols"; break;
-	case 102: s = "Processing"; break;
-	case 200: s = "OK"; break;
-	case 201: s = "Created"; break;
-	case 202: s = "Accepted"; break;
-	case 203: s = "Non-Authoritative Information"; break;
-	case 204: s = "No Content"; break;
-	case 205: s = "Reset Content"; break;
-	case 206: s = "Partial Content"; break;
-	case 207: s = "Multi-Status"; break;
-	case 208: s = "Already Reported"; break;
-	case 226: s = "IM Used"; break;
-	case 300: s = "Multiple Choices"; break;
-	case 301: s = "Moved Permanently"; break;
-	case 302: s = "Found"; break;
-	case 303: s = "See Other"; break;
-	case 304: s = "Not Modified"; break;
-	case 305: s = "Use Proxy"; break;
-	case 307: s = "Temporary Redirect"; break;
-	case 308: s = "Permanent Redirect"; break;
-	case 400: s = "Bad Request"; break;
-	case 401: s = "Unauthorized"; break;
-	case 402: s = "Payment Required"; break;
-	case 403: s = "Forbidden"; break;
-	case 404: s = "Not Found"; break;
-	case 405: s = "Method Not Allowed"; break;
-	case 406: s = "Not Acceptable"; break;
-	case 407: s = "Proxy Authentication Required"; break;
-	case 408: s = "Request Timeout"; break;
-	case 409: s = "Conflict"; break;
-	case 410: s = "Gone"; break;
-	case 411: s = "Length Required"; break;
-	case 412: s = "Precondition Failed"; break;
-	case 413: s = "Payload Too Large"; break;
-	case 414: s = "Uri Too Long"; break;
-	case 415: s = "Unsupported Media Type"; break;
-	case 416: s = "Range Not Satisfiable"; break;
-	case 417: s = "Expectation Failed"; break;
-	case 418: s = "I'm a teapot"; break;
-	case 422: s = "Unprocessable Entity"; break;
-	case 423: s = "Locked"; break;
-	case 424: s = "Failed Dependency"; break;
-	case 426: s = "Upgrade Required"; break;
-	case 428: s = "Precondition Required"; break;
-	case 429: s = "Too Many Requests"; break;
-	case 431: s = "Request Header Fields Too Large"; break;
-	case 500: s = "Internal Server Error"; break;
-	case 501: s = "Not Implemented"; break;
-	case 502: s = "Bad Gateway"; break;
-	case 503: s = "Service Unavailable"; break;
-	case 504: s = "Gateway Timeout"; break;
-	case 505: s = "HTTP Version Not Supported"; break;
-	case 506: s = "Variant Also Negotiates"; break;
-	case 507: s = "Insufficient Storage"; break;
-	case 508: s = "Loop Detected"; break;
-	case 510: s = "Not Extended"; break;
-	case 511: s = "Network Authentication Required"; break;
+	switch (status) {
+	case 100: s = "continue"; break;
+	case 101: s = "switching Protocols"; break;
+	case 102: s = "processing"; break;
+	case 200: s = "ok"; break;
+	case 201: s = "created"; break;
+	case 202: s = "accepted"; break;
+	case 203: s = "non-authoritative information"; break;
+	case 204: s = "no content"; break;
+	case 205: s = "reset content"; break;
+	case 206: s = "partial content"; break;
+	case 207: s = "multi-status"; break;
+	case 208: s = "already reported"; break;
+	case 226: s = "im used"; break;
+	case 300: s = "multiple choices"; break;
+	case 301: s = "moved permanently"; break;
+	case 302: s = "found"; break;
+	case 303: s = "see other"; break;
+	case 304: s = "not modified"; break;
+	case 305: s = "use proxy"; break;
+	case 307: s = "temporary redirect"; break;
+	case 308: s = "permanent redirect"; break;
+	case 400: s = "bad request"; break;
+	case 401: s = "unauthorized"; break;
+	case 402: s = "payment required"; break;
+	case 403: s = "forbidden"; break;
+	case 404: s = "not found"; break;
+	case 405: s = "method not allowed"; break;
+	case 406: s = "not acceptable"; break;
+	case 407: s = "proxy authentication required"; break;
+	case 408: s = "request timeout"; break;
+	case 409: s = "conflict"; break;
+	case 410: s = "gone"; break;
+	case 411: s = "length required"; break;
+	case 412: s = "precondition failed"; break;
+	case 413: s = "payload too large"; break;
+	case 414: s = "uri too long"; break;
+	case 415: s = "unsupported media type"; break;
+	case 416: s = "range not satisfiable"; break;
+	case 417: s = "expectation failed"; break;
+	case 418: s = "i'm a teapot"; break;
+	case 422: s = "unprocessable entity"; break;
+	case 423: s = "locked"; break;
+	case 424: s = "failed dependency"; break;
+	case 426: s = "upgrade required"; break;
+	case 428: s = "precondition required"; break;
+	case 429: s = "too many requests"; break;
+	case 431: s = "request header fields too large"; break;
+	case 500: s = "internal server error"; break;
+	case 501: s = "not implemented"; break;
+	case 502: s = "bad gateway"; break;
+	case 503: s = "service unavailable"; break;
+	case 504: s = "gateway timeout"; break;
+	case 505: s = "http version not supported"; break;
+	case 506: s = "variant also negotiates"; break;
+	case 507: s = "insufficient storage"; break;
+	case 508: s = "loop detected"; break;
+	case 510: s = "not extended"; break;
+	case 511: s = "network authentication required"; break;
 	}
 	return (s);
 }
 
 char *
-cgishift(struct request *r)
+shift(struct request *r)
 {
 	char *p;
 
@@ -141,108 +385,122 @@ cgishift(struct request *r)
 }
 
 char *
-cgiis(struct request *r, char *s)
+istype(struct request *req, char *s)
 {
 	char *p;
 
 	p = NULL;
-	if (r->type)
-		p = strstr(r->type, s);
+	if (*req->type)
+		p = strstr(req->type, s);
 	return (p);
 }
 
 char *
-cgiaccepts(struct request *r, char *s)
+accepts(struct request *req, char *s)
 {
 	char *p;
 
 	p = NULL;
-	if (r->accept)
-		p = strstr(r->accept, s);
+	if (*req->accept)
+		p = strstr(req->accept, s);
 	return (p);
 }
 
 void
-cgiredirect(struct request *req, struct response *res, char *path)
+redirect(struct request *req, struct response *res, char *path)
 {
 	char *fmt;
-	int *s;
+	int stt, *stts;
 
-	for (s = redirects; *s && *s != res->status; ++s);
-	if (*s == 0)
+	stt = res->status;
+	for (stts = redirects; *stts && *stts != stt; ++stts);
+	if (*stts == 0)
 		res->status = 303;
-	mapset(res->h, "location", path);
-	if (cgiaccepts(req, "html")) {
+
+	set(&res->header, "location", path);
+	if (accepts(req, "html")) {
 		res->type = "text/html;charset=utf-8";
 		fmt = "redirecting to <a href=\"%s\">link</a>";
 	} else {
 		res->type = "text/plain;charset=utf-8";
 		fmt = "redirecting to %s";
 	}
-	bufwrite(&res->body, fmt, path);
-}
 
-int
-cgiparse(struct request *r, char **envv)
-{
-	struct map *m[NHASH], **h, *c;
-	char *cookie, *key, *val, **v;
-
-	memset(m, 0, NHASH*sizeof(*m));
-	while ((val = *envv++))
-		if ((key = strsep(&val, "="))) {
-			key = strlc(key);
-			key = strrplc(key, '_', '-');
-			mapadd(m, key, val);
-		}
-
-	r->method = stom(mapget(m, "request-method"));
-	r->path = mapget(m, "path-info") + 1;
-	r->type = mapget(m, "content-type");
-	r->accept = mapget(m, "http-accept");
-	r->ip = mapget(m, "http-x-forwarded-for");
-	r->qs = mapget(m, "query-string");
-
-	cookie = mapget(m, "http-cookie");
-	while ((val = strsep(&cookie, ";")))
-		if ((key = strsep(&val, "="))) {
-			key = strlc(key);
-			key = strtrim(key);
-			mapadd(r->h, key, val);
-		}
-
-	for (h = m; h < &m[NHASH]; ++h)
-		for (c = *h; c; c = c->next)
-			if ((key = strsep(&c->key, "-"))
-			&& strcmp(key, "http") == 0)
-				for (v = c->val; *v; ++v)
-					mapadd(r->h, c->key, *v);
-	return (r->method);
+	writef(&res->body, fmt, path);
 }
 
 void
-cgiserve(struct response *r)
+parse(char **envv, struct request *req)
 {
-	struct map **m, *c;
-	char **v;
+	struct map *h;
+	struct method *m;
+	char *key, *val, *s;
+	int cmp, high, low, mid;
 
-	if (r->status == 0) {
-		if (r->body.len == 0)
-			r->status = 204;
-		else
-			r->status = 200;
+	h = &req->header;
+	while ((val = *envv++))
+		if ((key = strsep(&val, "="))) {
+			key = lowercase(key);
+			key = replace(key, '_', '-');
+			add(h, key, val);
+		}
+
+	low  = 0;
+	cmp  = -1;
+	high = Trace;
+	s    = get(h, "request-method");
+	while (low <= high && cmp) {
+		mid  = (low + high) / 2;
+		m    = methodtab + mid;
+		cmp  = strcmp(s, m->from);
+		if (cmp > 0)
+			low = mid + 1;
+		else if (cmp < 0)
+			high = mid - 1;
 	}
 
-	if (r->type == NULL)
-		r->type = "text/html;charset=utf-8";
-	printf("status: %d %s\r\n", r->status, ctos(r->status));
-	for (m = r->h; m < &r->h[NHASH]; ++m)
-		for (c = *m; c; c = c->next)
-			for (v = c->val; *v; ++v)
-				printf("%s: %s\r\n", c->key, *v);
-	printf("content-type: %s\r\n", r->type);
-	printf("content-length: %d\r\n", r->body.len);
+	req->method = cmp == 0 ? m->to : Get;
+	req->path   = get(h, "path-info") + 1;
+	req->type   = get(h, "content-type");
+	req->accept = get(h, "http-accept");
+	req->ip     = get(h, "http-x-forwarded-for");
+	req->query  = get(h, "query-string");
+}
+
+void
+render(struct response *res)
+{
+	struct buffer *b;
+	struct value *vs, *v;
+	char **keys, *key, **vals;
+	int i, status, len;
+
+	b   = &res->body;
+	len = b->at - b->s;
+	if (res->status == 0) {
+		if (len == 0)
+			res->status = 204;
+		else
+			res->status = 200;
+	}
+
+	if (res->type == NULL)
+		res->type = "text/html;charset=utf-8";
+
+	status = res->status;
+	printf("status: %d %s\r\n", status, sttstr(status));
+
+	keys = res->header.keys;
+	vs   = res->header.vals;
+	for (i = 0; i < NHASH; ++i) {
+		key = keys[i];
+		v   = vs + i;
+		if (key) for (vals = v->ss; vals < v->at; ++vals)
+			printf("%s: %s\n", key, *vals);
+	}
+
+	printf("content-type: %s\r\n", res->type);
+	printf("content-length: %d\r\n", len);
 	printf("\r\n");
-	if (r->body.len > 0)
-		printf("%.*s", r->body.len, r->body.s);
+	printf("%.*s", len, b->s);
 }
