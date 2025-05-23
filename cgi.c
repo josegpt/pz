@@ -108,20 +108,17 @@ static void
 logv(int sev, char *fmt, va_list ap)
 {
 	char *prefix, *prog, buf[256], *s;
-	int n, sz;
+	int n;
 
 	if (sev < Debug || sev > Fatal)
 		sev = Info;
 
-	sz = sizeof(buf);
-	memset(buf, 0, sz);
 	s = sevtab[sev];
 	prefix = "[%s] %s: ";
 	prog = (char *)getprogname();
 	n = snprintf(NULL, 0, prefix, s, prog);
 	snprintf(buf, n+1, prefix, s, prog);
-	n = strlcat(buf, fmt, sz);
-	buf[n] = '\0';
+	strlcat(buf, fmt, sizeof(buf));
 	vfprintf(stderr, buf, ap);
 }
 
