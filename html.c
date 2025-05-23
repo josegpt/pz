@@ -50,7 +50,7 @@ htmlhead(struct buffer *b, char *title, char *desc)
 	writen(b, "</header>");
 	writen(b, "<nav data-justify=center class=cluster>");
 	writen(b, "<a href=https://pz.do>index</a>");
-	writen(b, "<a href=https://addr.pz.do>acc</a>");
+	writen(b, "<a href=https://addr.pz.do>addr</a>");
 	writen(b, "</nav>");
 	writen(b, "<hr>");
 }
