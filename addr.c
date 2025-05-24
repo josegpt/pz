@@ -25,6 +25,18 @@
 static struct	response res;
 static struct	request req;
 
+static struct	htmllink addrlinks[] = {
+	{"https://pz.do",	"idx"},
+	{"/",			"[ addr ]"},
+	{NULL,			NULL}
+};
+
+static struct	htmllink errlinks[] = {
+	{"https://pz.do",	"idx"},
+	{"/",			"addr"},
+	{NULL,			NULL}
+};
+
 static void
 plainf(struct response *res, char *fmt, ...)
 {
@@ -42,7 +54,7 @@ addrhtml(struct response *res, char *ip)
 	struct buffer *b;
 
 	b = &res->body;
-	htmlhead(b, "addr", "public ip addr.");
+	htmlhead(b, "addr", "public ip addr.", addrlinks);
 	writen(b, "<main>");
 	writen(b, "<h1>%s</h1>", ip);
 	writen(b, "</main>");
@@ -59,7 +71,7 @@ notallowed(struct response *res, struct request *req)
 	res->status = status;
 	info("notallowed: path %s", path);
 	if (accepts(req, "html"))
-		htmlerr(&res->body, status);
+		htmlerr(&res->body, status, errlinks);
 	else
 		plainf(res, "%d %s", status, sttstr(status));
 }
@@ -75,7 +87,7 @@ notfound(struct response *res, struct request *req)
 	case Get:
 		res->status = 404;
 		if (accepts(req, "html"))
-			htmlerr(&res->body, res->status);
+			htmlerr(&res->body, res->status, errlinks);
 		else
 			plainf(res, "usage: addr.pz.do[/]");
 		break;

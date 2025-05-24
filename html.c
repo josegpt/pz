@@ -19,9 +19,10 @@
 #include <string.h>
 
 #include "cgi.h"
+#include "html.h"
 
 void
-htmlhead(struct buffer *b, char *title, char *desc)
+htmlhead(struct buffer *b, char *title, char *desc, struct htmllink *l)
 {
 	writen(b, "<!doctype html>");
 	writen(b, "<html lang=en>");
@@ -49,14 +50,16 @@ htmlhead(struct buffer *b, char *title, char *desc)
 	writen(b, "</a>");
 	writen(b, "</header>");
 	writen(b, "<nav data-justify=center class=cluster>");
-	writen(b, "<a href=https://pz.do>idx</a>");
-	writen(b, "<a href=/>[ addr ]</a>");
+
+	for (; l->href; ++l)
+		writen(b, "<a href=%s>%s</a>", l->href, l->text);
+
 	writen(b, "</nav>");
 	writen(b, "<hr>");
 }
 
 void
-htmlerr(struct buffer *b, int status)
+htmlerr(struct buffer *b, int status, struct htmllink *ls)
 {
 	char *title, *msg;
 
@@ -72,7 +75,7 @@ htmlerr(struct buffer *b, int status)
 	}
 
 	title  = sttstr(status);
-	htmlhead(b, title, title);
+	htmlhead(b, title, title, ls);
 	writen(b, "<main class=stack>");
 	writen(b, "<header>");
 	writen(b, "<h1>%d</h1>", status);

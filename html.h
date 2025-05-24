@@ -14,5 +14,9 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-void	htmlhead(struct buffer *, char *, char *);
-void	htmlerr(struct buffer *, int);
+struct	htmllink {
+	char	*href, *text;
+};
+
+void	htmlhead(struct buffer *, char *, char *, struct htmllink *);
+void	htmlerr(struct buffer *, int, struct htmllink *);
