@@ -81,6 +81,6 @@ char	*sttstr(int);
 char	*shift(struct request *);
 char	*istype(struct request *, char *);
 char	*accepts(struct request *, char *);
-void	 redirect(struct request *, struct response *, char *);
-void	 parse(char **, struct request *);
+void	 parse(struct request *, char **);
+void	 redirect(struct response *, struct request *, char *);
 void	 render(struct response *);

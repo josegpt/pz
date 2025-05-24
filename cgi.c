@@ -390,7 +390,7 @@ accepts(struct request *req, char *s)
 }
 
 void
-redirect(struct request *req, struct response *res, char *path)
+redirect(struct response *res, struct request *req, char *path)
 {
 	char *fmt;
 	int stt, *stts;
@@ -413,7 +413,7 @@ redirect(struct request *req, struct response *res, char *path)
 }
 
 void
-parse(char **envv, struct request *req)
+parse(struct request *req, char **envv)
 {
 	struct map *h;
 	struct method *m;

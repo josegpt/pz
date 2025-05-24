@@ -22,8 +22,8 @@
 #include "cgi.h"
 #include "html.h"
 
-static struct	request req;
 static struct	response res;
+static struct	request req;
 
 static void
 plainf(struct response *res, char *fmt, ...)
@@ -49,7 +49,7 @@ addrhtml(struct response *res, char *ip)
 }
 
 static void
-notallowed(struct request *req, struct response *res)
+notallowed(struct response *res, struct request *req)
 {
 	char *path;
 	int status;
@@ -65,7 +65,7 @@ notallowed(struct request *req, struct response *res)
 }
 
 static void
-notfound(struct request *req, struct response *res)
+notfound(struct response *res, struct request *req)
 {
 	char *path;
 
@@ -80,12 +80,12 @@ notfound(struct request *req, struct response *res)
 			plainf(res, "usage: addr.pz.do[/]");
 		break;
 	default:
-		notallowed(req, res);
+		notallowed(res, req);
 	}
 }
 
 static void
-addr(struct request *req, struct response *res)
+addr(struct response *res, struct request *req)
 {
 	char *ip;
 
@@ -99,7 +99,7 @@ addr(struct request *req, struct response *res)
 			plainf(res, "%s", ip);
 		break;
 	default:
-		notallowed(req, res);
+		notallowed(res, req);
 	}
 }
 
@@ -113,12 +113,12 @@ main(int argc, char **argv, char **envv)
 	if (pledge("stdio", NULL) == -1)
 		fatal("pledge");
 
-	parse(envv, &req);
+	parse(&req, envv);
 	path = shift(&req);
 	if (*path == '\0')
-		addr(&req, &res);
+		addr(&res, &req);
 	else
-		notfound(&req, &res);
+		notfound(&res, &req);
 
 	render(&res);
 	return (EXIT_SUCCESS);
