@@ -109,9 +109,6 @@ logv(int sev, char *fmt, va_list ap)
 {
 	char *prefix, *prog, buf[256], *s;
 
-	if (sev < Debug || sev > Fatal)
-		sev = Info;
-
 	s      = sevtab[sev];
 	prefix = "[%s] %s: ";
 	prog   = (char *)getprogname();
