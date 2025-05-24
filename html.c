@@ -49,8 +49,8 @@ htmlhead(struct buffer *b, char *title, char *desc)
 	writen(b, "</a>");
 	writen(b, "</header>");
 	writen(b, "<nav data-justify=center class=cluster>");
-	writen(b, "<a href=https://pz.do>index</a>");
-	writen(b, "<a href=https://addr.pz.do>addr</a>");
+	writen(b, "<a href=https://pz.do>idx</a>");
+	writen(b, "<a href=/>[ addr ]</a>");
 	writen(b, "</nav>");
 	writen(b, "<hr>");
 }
@@ -66,6 +66,7 @@ htmlerr(struct buffer *b, int status)
 		break;
 	case 405:
 		msg = "we don't do that here.";
+		break;
 	default:
 		msg = "someting weeeeird happened.";
 	}
