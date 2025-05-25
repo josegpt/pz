@@ -457,8 +457,12 @@ render(struct response *res)
 	char **keys, *key, **vals;
 	int i, status, len;
 
-	b   = &res->body;
-	len = b->at - b->s;
+	b = &res->body;
+	if (b->at == NULL)
+		len = 0;
+	else
+		len = b->at - b->s;
+
 	if (res->status == 0) {
 		if (len == 0)
 			res->status = 204;
@@ -475,7 +479,7 @@ render(struct response *res)
 	keys = res->header.keys;
 	vs   = res->header.vals;
 	for (i = 0; i < NHASH; ++i) {
-		key = keys[i];
+		key = *(keys + i);
 		v   = vs + i;
 		if (key) for (vals = v->ss; vals < v->at; ++vals)
 			printf("%s: %s\n", key, *vals);
