@@ -415,10 +415,10 @@ redirect(struct response *res, struct request *req, char *path)
 void
 parse(struct request *req, char **envv)
 {
+	struct method *low, *high, *mid;
 	struct map *h;
-	struct method *m;
 	char *key, *val, *s;
-	int cmp, high, low, mid;
+	int cmp;
 
 	h = &req->header;
 	while ((val = *envv++))
@@ -428,21 +428,20 @@ parse(struct request *req, char **envv)
 			add(h, key, val);
 		}
 
-	low  = 0;
+	low  = methodtab;
 	cmp  = -1;
-	high = Trace;
+	high = methodtab + Trace;
 	s    = get(h, "request-method");
 	while (low <= high && cmp) {
-		mid  = (low + high) / 2;
-		m    = methodtab + mid;
-		cmp  = strcmp(s, m->from);
+		mid  = low + (high - low) / 2;
+		cmp  = strcmp(s, mid->from);
 		if (cmp > 0)
 			low = mid + 1;
 		else if (cmp < 0)
 			high = mid - 1;
 	}
 
-	req->method = cmp == 0 ? m->to : Get;
+	req->method = cmp == 0 ? mid->to : Get;
 	req->path   = get(h, "path-info") + 1;
 	req->type   = get(h, "content-type");
 	req->accept = get(h, "http-accept");
