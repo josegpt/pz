@@ -424,7 +424,7 @@ parse(struct request *req, char **envv)
 {
 	struct method *low, *high, *mid;
 	struct map *h;
-	char *key, *val, *s;
+	char *key, *val, *meth;
 	int cmp;
 
 	h = &req->header;
@@ -438,10 +438,10 @@ parse(struct request *req, char **envv)
 	low  = methodtab;
 	cmp  = -1;
 	high = methodtab + Trace;
-	s    = get(h, "request-method");
+	meth = get(h, "request-method");
 	while (low <= high && cmp) {
 		mid  = low + (high - low) / 2;
-		cmp  = strcmp(s, mid->from);
+		cmp  = strcmp(meth, mid->from);
 		if (cmp > 0)
 			low = mid + 1;
 		else if (cmp < 0)
