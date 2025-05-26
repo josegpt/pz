@@ -363,11 +363,18 @@ sttstr(int status)
 }
 
 char *
-shift(struct request *r)
+shift(struct request *req)
 {
 	char *p;
 
-	p = strsep(&r->path, "/");
+	if (*req->path == '/')
+		++req->path;
+
+	p = strsep(&req->path, "/");
+
+	if (req->path == NULL)
+		req->path = "";
+
 	return (p);
 }
 
@@ -442,7 +449,7 @@ parse(struct request *req, char **envv)
 	}
 
 	req->method = cmp == 0 ? mid->to : Get;
-	req->path   = get(h, "path-info") + 1;
+	req->path   = get(h, "path-info");
 	req->type   = get(h, "content-type");
 	req->accept = get(h, "http-accept");
 	req->ip     = get(h, "http-x-forwarded-for");
